@@ -2,14 +2,19 @@ window.addEventListener("DOMContentLoaded", loadEventHandlers);
 
 function loadEventHandlers() {
   /* *** Code for the drop zone *** */
+  let selected = null;
   document
     .querySelector(".drop-zone")
     ?.addEventListener("dragover", handleDragOver);
   document.querySelector(".drop-zone")?.addEventListener("drop", handleDrop);
 
-  function handleDragOver(event) {
+  function handleDragOver(e) {
     console.log("dragOver");
-    event.preventDefault();
+    if (isBefore(selected, e.target)) {
+      e.target.parentNode.insertBefore(selected, e.target);
+    } else {
+      e.target.parentNode.insertBefore(selected, e.target.nextSibling);
+    }
   }
   function handleDrop(event) {
     console.log("Drop");
@@ -26,21 +31,29 @@ function loadEventHandlers() {
   );
 
   draggableLIs.forEach((draggableLI) => {
-    draggableLI.addEventListener("dragstart", (event) => {
+    draggableLI.addEventListener("dragstart", (e) => {
       console.log("dragStart");
       // Change the source element's background color
       // to show that drag has started
-      event.currentTarget.classList.add("dragging");
-      // Clear the drag data cache (for all formats/types)
-      event.dataTransfer.clearData();
-      // Set the drag's format and data.
-      // Use the event target's id for the data
-      event.dataTransfer.setData("text/plain", event.target.id);
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", null);
+      selected = e.target;
     });
 
     draggableLI.addEventListener("dragend", (event) => {
       event.target.classList.remove("dragging");
       event.target.classList.add("was-dragged");
+      selected = null;
     });
   });
+
+  function isBefore(el1, el2) {
+    let cur;
+    if (el2.parentNode === el1.parentNode) {
+      for (cur = el1.previousSibling; cur; cur = cur.previousSibling) {
+        if (cur === el2) return true;
+      }
+    }
+    return false;
+  }
 }
